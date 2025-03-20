@@ -324,4 +324,118 @@ The project uses TypeScript with strict type checking:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## GitHub Webhook Integration
+
+### Overview
+DevCast uses GitHub webhooks to receive real-time notifications about repository events, ensuring that user activities are quickly captured and processed into social media content. The webhook integration allows the system to respond immediately to new commits, pull requests, issues, and releases.
+
+### Current Workflow
+1. **Webhook Reception**: GitHub sends event data to the DevCast webhook endpoint when activities occur in registered repositories
+2. **Signature Verification**: The webhook handler verifies the request authenticity using HMAC-SHA256 signatures
+3. **User Identification**: The handler identifies the user based on the GitHub username in the event
+4. **Activity Processing**: The GitHubService processes the event and creates appropriate activity records
+5. **Database Storage**: Activities are stored in MongoDB with proper schema validation
+6. **Content Generation**: (Pending Implementation) The system will generate social media content based on the activities
+
+### Issues and Fixes
+
+#### Field Name Mismatches
+- **Issue**: Activity creation was failing due to model schema validation errors
+- **Resolution**: 
+  - Fixed field naming inconsistencies between code and database schema
+  - Renamed `user` → `userId` and `repository` → `repo` throughout the codebase
+  - Added proper schema validation to ensure data integrity
+
+#### Metadata Organization
+- **Issue**: Non-standard fields weren't properly organized in the schema
+- **Resolution**:
+  - Moved specialized fields like `commitSha`, `prNumber`, etc. into a dedicated `metadata` object
+  - Improved type safety for metadata properties
+  - Added proper index support for efficient queries
+
+#### Development Mode Support
+- **Issue**: Testing webhook functionality was difficult without live GitHub events
+- **Resolution**:
+  - Implemented proper development mode support in webhook handlers and service layer
+  - Added fallback for test users in development environment
+  - Created test scripts to simulate webhook events locally
+
+#### Error Handling and Logging
+- **Issue**: Error details were not properly captured, making debugging difficult
+- **Resolution**:
+  - Improved error handling and logging throughout the webhook flow
+  - Added comprehensive try/catch blocks with specific error messages
+  - Ensured error responses maintain GitHub webhook protocol compliance
+
+#### Schema Compliance
+- **Issue**: Activities weren't consistent with the expected schema format
+- **Resolution**:
+  - Added required `status` field to all activities
+  - Ensured consistent date handling for `createdAt` and `updatedAt` fields
+  - Standardized URL fields to improve frontend display consistency
+
+### Webhook Testing Tools
+
+The project includes several utilities to help test and debug webhook functionality:
+
+- **webhook-test.js**: Script that simulates GitHub webhook events by sending properly signed payloads
+- **create-test-activity.js**: Utility to directly create test activities in the database
+- **show-activities.js**: Tool to display detailed information about activities in the database
+- **WEBHOOK_TEST.md**: Test file used to trigger real GitHub webhook events
+
+### Next Steps
+
+1. **Historical Data Integration**:
+   - Implement functionality to fetch historical GitHub data when a user connects their account
+   - Design efficient pagination to handle large repositories
+   - Create background jobs for initial repository synchronization
+
+2. **Content Generation Pipeline**:
+   - Connect the activity collection to the content generation service
+   - Implement smart grouping of related activities
+   - Add natural language processing to extract meaningful content from technical activities
+
+3. **Webhook Management UI**:
+   - Create a dashboard interface for users to manage webhook configuration
+   - Implement webhook status monitoring and testing tools
+   - Add detailed logs and error reporting
+
+4. **Reliability Improvements**:
+   - Implement webhook retries and timeout handling
+   - Add rate limiting for webhook reception
+   - Create alerts for webhook failures
+
+5. **Activity Enhancement**:
+   - Expand metadata collection for richer activity context
+   - Implement activity relationships (e.g., linking PRs to issues)
+   - Add code diff analysis for smarter content generation
+
+6. **Deployment Automation**:
+   - Set up continuous integration and deployment for webhook handlers
+   - Implement robust monitoring for webhook endpoint
+   - Create automated testing for webhook functionality
+
+7. **User Onboarding**:
+   - Simplify the process of setting up GitHub webhooks
+   - Create step-by-step guides for repository connection
+   - Implement automatic webhook creation via GitHub API
+
+### Webhook Configuration
+
+To set up a GitHub webhook that connects to DevCast:
+
+1. Go to your GitHub repository settings
+2. Navigate to "Webhooks" and click "Add webhook"
+3. Set the Payload URL to your DevCast webhook URL (e.g., `https://your-devcast-url.com/api/webhooks/github`)
+4. Set Content type to `application/json`
+5. Set Secret to your `GITHUB_WEBHOOK_SECRET` value from `.env`
+6. Select events you want to track (Recommended: Pushes, Pull requests, Issues, Releases)
+7. Ensure "Active" is checked and save
+
+For local development testing:
+1. Install and configure ngrok (`brew install ngrok` on macOS)
+2. Run ngrok to expose your local server: `ngrok http 3000`
+3. Use the ngrok URL as your webhook URL in GitHub
+4. Set `APP_ENV=development` in your `.env` file to enable development mode 
