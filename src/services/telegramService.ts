@@ -37,6 +37,23 @@ export class TelegramService {
   }
 
   /**
+   * Get the bot instance
+   * @returns The Telegram bot instance
+   */
+  getBot(): TelegramBot {
+    return this.bot;
+  }
+
+  /**
+   * Stop the bot polling
+   */
+  stopPolling(): void {
+    if (this.bot) {
+      this.bot.stopPolling();
+    }
+  }
+
+  /**
    * Start the bot polling
    */
   startPolling(): void {

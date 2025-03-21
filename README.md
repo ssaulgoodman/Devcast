@@ -35,6 +35,7 @@ All project documentation is stored in the `docs/` folder. Here's a quick refere
 | [DEVELOPMENT_NOTES.md](docs/DEVELOPMENT_NOTES.md) | Notes for developers working on the project |
 | [ENHANCED_LOGGING.md](docs/ENHANCED_LOGGING.md) | Detailed guide to the structured logging system and its usage |
 | [IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) | Details on implementation decisions and architecture |
+| [INTEGRATED_SERVER.md](docs/INTEGRATED_SERVER.md) | Guide to the integrated development server combining Next.js and Telegram bot |
 | [LOGGING_IMPROVEMENTS.md](docs/LOGGING_IMPROVEMENTS.md) | Recommendations for improving the logging system |
 | [LOGGING_SUMMARY.md](docs/LOGGING_SUMMARY.md) | Overview of the current logging infrastructure |
 | [PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md) | Summary of project progress and milestones |
@@ -233,8 +234,24 @@ See [TELEGRAM_GUIDE.md](TELEGRAM_GUIDE.md) for detailed setup and usage instruct
 
 5. Run the development server:
    ```bash
+   # Start both Next.js and Telegram bot with a single command
    npm run dev
+   
+   # OR use the convenience script
+   ./start.sh
+   
+   # To run only Next.js without Telegram bot
+   npm run dev:next-only
+   
+   # To stop any running servers
+   ./stop.sh
    ```
+
+   The integrated server automatically:
+   - Starts Next.js on port 3000
+   - Connects to MongoDB
+   - Starts the Telegram bot in the same process
+   - Handles graceful shutdown of all components
 
 ### Configuration
 
