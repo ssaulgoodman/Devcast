@@ -1,21 +1,65 @@
 # DevCast
 
-A build-in-public agent that automatically creates social media content from your development activities. DevCast monitors your GitHub activity and crafts engaging social media updates for your Twitter/X, LinkedIn, and other social platforms.
+Activity test update: Updated on $(date)
+
+A build-in-public agent that automatically creates social media content from your development activities. DevCast monitors your GitHub activity and crafts engaging social media updates for your Twitter/X, LinkedIn, and other social platforms - all manageable through a simple Telegram bot interface.
 
 ## Overview
 
-DevCast helps developers showcase their work by automatically transforming technical GitHub activities into engaging social media content. The application monitors your commits, pull requests, issues, and releases, processes them with AI to create compelling posts, and publishes them to your connected social media accounts after your approval.
+DevCast helps developers showcase their work by automatically transforming technical GitHub activities into engaging social media content. The application monitors your commits, pull requests, issues, and releases, processes them with AI to create compelling posts, and publishes them to your connected social media accounts after your approval through a convenient Telegram interface.
 
 ## Features
 
 - **GitHub Activity Tracking**: Automatically monitors commits, PRs, issues, and releases
-- **Activity Management**: View, filter, and manage your GitHub activities through an intuitive dashboard
+- **Activity Management**: View and manage your GitHub activities through Telegram commands
 - **AI-Powered Content Generation**: Transforms technical activities into engaging social media posts
+  - Supports both OpenAI (GPT-4) and Anthropic (Claude) models
+  - User-configurable AI provider preferences
 - **Customizable Voice and Style**: Maintains your personal tone and writing style
 - **Multi-Platform Publishing**: Posts to Twitter/X, LinkedIn, and other social platforms
-- **Approval Workflow**: Review and approve posts before they go live
-- **Analytics Dashboard**: Track engagement metrics for your development content
+- **Telegram-Based Approval Workflow**: Review and approve posts directly in Telegram
+- **Interactive Command Interface**: Manage all aspects of your content through simple commands
 - **Flexible Scheduling**: Set optimal posting times for maximum visibility
+
+## Documentation Index
+
+All project documentation is stored in the `docs/` folder. Here's a quick reference guide:
+
+| Document | Description |
+|----------|-------------|
+| [ACTIVITY_STATUS_TRACKING.md](docs/ACTIVITY_STATUS_TRACKING.md) | Comprehensive guide to activity status lifecycle and implementation |
+| [AI_INTEGRATION_SUMMARY.md](docs/AI_INTEGRATION_SUMMARY.md) | Overview of AI model integration for content generation |
+| [DATABASE_ANALYSIS_REPORT.md](docs/database-analysis-report.md) | Comprehensive analysis of database structure and relationships |
+| [DEVCAST_DIAGNOSTIC_REPORT.md](docs/devcast-diagnostic-report.md) | System diagnostic report with identified issues and recommendations |
+| [DEVCAST_FIXES_APPLIED.md](docs/devcast-fixes-applied.md) | Documentation of fixes applied to address system issues |
+| [DEVELOPMENT_NOTES.md](docs/DEVELOPMENT_NOTES.md) | Notes for developers working on the project |
+| [IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) | Details on implementation decisions and architecture |
+| [LOGGING_IMPROVEMENTS.md](docs/LOGGING_IMPROVEMENTS.md) | Recommendations for improving the logging system |
+| [LOGGING_SUMMARY.md](docs/LOGGING_SUMMARY.md) | Overview of the current logging infrastructure |
+| [PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md) | Summary of project progress and milestones |
+| [PROMPT_ENGINEERING.md](docs/PROMPT_ENGINEERING.md) | Guide to AI prompt engineering for content generation |
+| [TELEGRAM_GUIDE.md](docs/TELEGRAM_GUIDE.md) | Complete guide to Telegram bot integration and usage |
+| [TESTING_SCRIPTS_GUIDE.md](docs/TESTING_SCRIPTS_GUIDE.md) | Comprehensive guide to testing scripts and utilities |
+| [TWITTER_INTEGRATION.md](docs/TWITTER_INTEGRATION.md) | Details on Twitter API integration |
+| [USING_CLAUDE.md](docs/USING_CLAUDE.md) | Guide to using Claude AI models for content generation |
+| [WEBHOOK_QUICKSTART.md](docs/WEBHOOK_QUICKSTART.md) | Quick start guide for setting up GitHub webhooks |
+| [WEBHOOK_STATUS.md](docs/WEBHOOK_STATUS.md) | Status report on webhook implementation |
+| [WEBHOOK_TEST.md](docs/WEBHOOK_TEST.md) | Instructions for testing webhook functionality |
+| [WEBHOOK_TROUBLESHOOTING.md](docs/WEBHOOK_TROUBLESHOOTING.md) | Guide to troubleshooting webhook issues |
+
+## Testing Scripts Index
+
+The project includes a variety of utility scripts for testing and debugging. For full details, see [TESTING_SCRIPTS_GUIDE.md](docs/TESTING_SCRIPTS_GUIDE.md).
+
+Key script categories include:
+- **API and Service Testing**: Scripts to test AI providers, content generation, and full content workflow
+- **Twitter Integration Testing**: Utilities for validating Twitter API connectivity and posting
+- **GitHub Webhook Testing**: Tools to simulate webhook events and test handlers
+- **Telegram Bot Testing**: Scripts for bot management and command testing 
+- **Database Utilities**: Tools for data inspection, repair, and standardization
+- **System Configuration Testing**: Scripts to verify environment variables and API permissions
+
+For usage instructions and detailed descriptions, refer to the testing scripts guide.
 
 ## Project Structure
 
@@ -62,6 +106,7 @@ devcast/
 ├── .github/              # GitHub configuration
 │   └── workflows/        # GitHub Actions workflows
 │       └── ci.yml        # CI/CD pipeline configuration
+├── docs/                 # Documentation files
 └── public/               # Static assets
 ```
 
@@ -69,12 +114,12 @@ devcast/
 
 DevCast is built on a modern tech stack:
 
-- **Next.js**: Full-stack React framework for the web UI and API routes
+- **Next.js**: Full-stack React framework for the web API
 - **MongoDB**: Database for storing user profiles, activities, and content
 - **OpenAI**: AI-powered content generation
 - **GitHub API**: Monitoring repository activities (via Octokit)
 - **Twitter API**: Posting updates to Twitter/X (via twitter-api-v2)
-- **Telegram Bot API**: User-friendly approval flow (via node-telegram-bot-api)
+- **Telegram Bot API**: Primary UI for approval workflow and management (via node-telegram-bot-api)
 
 ## Data Flow
 
@@ -91,7 +136,7 @@ DevCast is built on a modern tech stack:
 
 3. **Approval Flow**:
    - Generated content is sent to users via Telegram
-   - Users can approve, reject, or edit the content with simple commands
+   - Users can approve, reject, or edit the content with simple commands or interactive buttons
    - Status updates are stored in the database
 
 4. **Publishing**:
@@ -105,7 +150,27 @@ DevCast is built on a modern tech stack:
 - NextAuth.js handles GitHub and Twitter OAuth
 - JWT tokens are used for session management
 - Sensitive tokens are stored securely in the database
-- Telegram chat registration links user accounts
+- Telegram chat registration securely links user accounts with Telegram chat ID
+
+## Primary Interface: Telegram Bot
+
+DevCast uses a Telegram bot as the primary interface for users:
+
+### Benefits
+- Reduces context switching for developers
+- Provides real-time notifications
+- Enables quick approval workflow
+- Works on all devices (mobile and desktop)
+- Simple command-based interface
+
+### Key Commands
+- `/start` - Initialize the bot
+- `/register` - Link Telegram to DevCast account
+- `/activities` - View recent GitHub activities
+- `/pending` - Review content waiting for approval
+- `/help` - View all available commands
+
+See [TELEGRAM_GUIDE.md](TELEGRAM_GUIDE.md) for detailed setup and usage instructions.
 
 ## Database Schema
 
@@ -179,6 +244,29 @@ After initial setup, you'll need to:
 3. Set up your Telegram approval workflow
 4. Configure your posting preferences and schedule
 
+### Telegram Bot Setup
+
+1. Create a new bot through BotFather in Telegram:
+   - Search for `@BotFather` in Telegram
+   - Send `/newbot` and follow the instructions
+   - Save the bot token
+
+2. Add the token to your environment variables:
+   ```
+   TELEGRAM_BOT_TOKEN=your_bot_token
+   ```
+
+3. Set up the webhook (requires public HTTPS URL):
+   ```bash
+   node scripts/setup-telegram-webhook.js https://your-domain.com/api/telegram/webhook
+   ```
+
+4. Link your Telegram chat with your DevCast account:
+   - Send `/register` to your bot with your unique code
+   - Or run the test user setup script for development
+
+See [TELEGRAM_GUIDE.md](TELEGRAM_GUIDE.md) for detailed instructions.
+
 ## Development Guide
 
 ### Local Development
@@ -201,64 +289,98 @@ The project uses TypeScript with strict type checking:
 - End-to-end testing for authentication flow
 - Run tests with `npm test` or get coverage report with `npm run test:coverage`
 
+## Debugging Features
+
+DevCast includes a comprehensive logging system to help with troubleshooting and development:
+
+### Logging System
+
+- **File-based Logging**: 
+  - Core services write logs to various locations for debugging
+  - The content generation process logs detailed information about AI requests and responses
+  - Telegram service logs all user interactions and command processing
+
+### Log Files
+
+- **AI Debug Logs**:
+  - `logs/ai-debug.log`: Detailed logs of AI interactions
+  - `claude-debug.log`: Direct logs from Claude API interactions in the root directory
+  - `telegram-debug.log`: Logs of Telegram bot interactions
+  - `fallback-debug.log`: Alternative log location if primary logging fails
+
+### Testing Logging System
+
+The repository includes a test script to verify file system access:
+
+```bash
+node test-logs.js
+```
+
+This script verifies if the application can create and write to log files in various locations.
+
+### Known Issues
+
+- Log files may not be created consistently during normal operation
+- The application has permission to create files, but the logging mechanism may encounter issues when running as a service
+- For best results in troubleshooting, run the application with `console.log` output visible
+
+### Future Improvements
+
+- Add structured logging with levels (info, warn, error)
+- Implement log rotation to manage file sizes
+- Add configurable log destinations (file, console, remote service)
+- Improve error reporting with more detailed context
+
 ### Deployment
 - Vercel for Next.js hosting
-- MongoDB Atlas for database
-- Vercel Cron for scheduled tasks
 
-## Recent Progress
+## Recent Implementation Changes
 
-### UI Implementation
-- **Authentication Pages**: Added comprehensive sign-in, sign-out, and error pages
-- **Dashboard Interface**: Created a responsive dashboard to view activities and content
-- **Settings Management**: Implemented a user settings page with customization options
-- **Responsive Design**: Ensured UI works well on mobile and desktop devices
+### AI Content Generation
 
-### API Development
-- **User Settings API**: Created endpoints for fetching and updating user preferences
-- **Activities API**: Implemented robust endpoints for GitHub activity management:
-  - List, create, update, and delete activities
-  - Process activities with AI content generation
-  - Publish processed activities to social media
-- **Content API**: Added endpoints for content creation, approval, and publishing
+- Upgraded to Claude 3.7 Sonnet with a specialized system prompt
+- Enhanced prompt engineering for direct content generation and platform-specific formatting
+- Improved post-processing to clean outputs and ensure platform compatibility
+- Added metadata storage for debugging and enhanced error handling
 
-### Activities Tracking & Social Sharing
-- **Activity Components**: Built reusable UI components for displaying GitHub activities:
-  - `ActivityCard`: Displays individual GitHub activities with appropriate visual styling based on type
-  - `ActivityList`: Shows paginated activities with filtering capabilities
-  - `PaginationControls`: Reusable pagination component with accessibility features
-- **Activity Service Layer**: Created a comprehensive service layer for activity management:
-  - Fetching activities with pagination and filtering
-  - Creating, updating, and deleting activities
-  - Processing activities with AI content generation
-  - Publishing processed activities to social media
-- **Database Model**: Implemented MongoDB schema for activities with appropriate indexes and utility methods
-- **Testing**: Created extensive test coverage for components and services
+### Activity Status Tracking
 
-### Testing Infrastructure
-- **Jest Configuration**: Set up Jest with Next.js for comprehensive testing
-- **Component Testing**: Implemented React Testing Library for testing UI components
-- **API Testing**: Added tests for API endpoints with proper mocking of external dependencies
-- **Service Testing**: Created tests for service layer functions with mocked HTTP requests
-- **Mock Implementation**: Set up mocks for:
-  - Next.js router and next-auth authentication
-  - Axios HTTP client
-  - MongoDB database and Mongoose ORM
-  - External services (GitHub, Twitter/X, OpenAI)
+Full details are available in [ACTIVITY_STATUS_TRACKING.md](docs/ACTIVITY_STATUS_TRACKING.md).
 
-### TypeScript and Code Quality Improvements
-- **Enhanced Type Safety**: Improved type definitions across the codebase
-  - Properly defined interfaces for Content, User, and Activity models
-  - Added appropriate type guards and null checks
-  - Implemented consistent error handling with proper typing
-- **Fixed API Service Types**: Resolved interface inconsistencies in service layers
-  - Updated Content model usage to use IContent interface consistently
-  - Fixed return types in GitHub, Twitter, and Telegram services
-  - Ensured null safety in telegramService and user property access
-- **Testing Polyfills**: Added proper TextEncoder and TextDecoder polyfills for Node.js environment
-- **Mongoose Mocking**: Improved mocking strategy for MongoDB ObjectId in tests
-- **Test Coverage Improvement**: Achieved 100% pass rate on all test suites
-- **Build Optimization**: Ensured clean Next.js builds with no TypeScript errors
+- **Complete Lifecycle**: Implemented pending → processed → published status transitions
+- **Status Updates**: Added triggers in ContentGenerator and TelegramService
+- **Data Consistency**: Created scripts to fix historical inconsistencies
+- **User Experience**: Enhanced status visibility in user notifications and commands
+
+### Telegram Service
+
+- Added enhanced command processing with improved error handling
+- Implemented AI provider selection via `/ai` command
+- Added progress and status messages for long-running operations
+- Created fallback content generation for service failures
+
+### Error Handling and Resilience
+
+- Added specific handling for different API error types
+- Implemented exponential backoff for retryable errors
+- Created fallback mechanisms between AI providers
+- Enhanced error reporting and user-friendly messages
+
+## GitHub Webhook Integration
+
+DevCast receives real-time notifications about repository events through GitHub webhooks. For detailed setup and troubleshooting, see [WEBHOOK_QUICKSTART.md](docs/WEBHOOK_QUICKSTART.md).
+
+### Key Features
+- Real-time activity capture from GitHub repositories
+- Secure request verification via HMAC-SHA256 signatures
+- Automatic activity creation in the database
+- Integration with content generation pipeline
+
+### Recent Improvements
+- Fixed field naming inconsistencies and schema validation
+- Organized specialized fields in a dedicated metadata object
+- Enhanced development mode for local testing
+- Improved error handling throughout the webhook flow
 
 ## Next Steps
 
@@ -324,118 +446,4 @@ The project uses TypeScript with strict type checking:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## GitHub Webhook Integration
-
-### Overview
-DevCast uses GitHub webhooks to receive real-time notifications about repository events, ensuring that user activities are quickly captured and processed into social media content. The webhook integration allows the system to respond immediately to new commits, pull requests, issues, and releases.
-
-### Current Workflow
-1. **Webhook Reception**: GitHub sends event data to the DevCast webhook endpoint when activities occur in registered repositories
-2. **Signature Verification**: The webhook handler verifies the request authenticity using HMAC-SHA256 signatures
-3. **User Identification**: The handler identifies the user based on the GitHub username in the event
-4. **Activity Processing**: The GitHubService processes the event and creates appropriate activity records
-5. **Database Storage**: Activities are stored in MongoDB with proper schema validation
-6. **Content Generation**: (Pending Implementation) The system will generate social media content based on the activities
-
-### Issues and Fixes
-
-#### Field Name Mismatches
-- **Issue**: Activity creation was failing due to model schema validation errors
-- **Resolution**: 
-  - Fixed field naming inconsistencies between code and database schema
-  - Renamed `user` → `userId` and `repository` → `repo` throughout the codebase
-  - Added proper schema validation to ensure data integrity
-
-#### Metadata Organization
-- **Issue**: Non-standard fields weren't properly organized in the schema
-- **Resolution**:
-  - Moved specialized fields like `commitSha`, `prNumber`, etc. into a dedicated `metadata` object
-  - Improved type safety for metadata properties
-  - Added proper index support for efficient queries
-
-#### Development Mode Support
-- **Issue**: Testing webhook functionality was difficult without live GitHub events
-- **Resolution**:
-  - Implemented proper development mode support in webhook handlers and service layer
-  - Added fallback for test users in development environment
-  - Created test scripts to simulate webhook events locally
-
-#### Error Handling and Logging
-- **Issue**: Error details were not properly captured, making debugging difficult
-- **Resolution**:
-  - Improved error handling and logging throughout the webhook flow
-  - Added comprehensive try/catch blocks with specific error messages
-  - Ensured error responses maintain GitHub webhook protocol compliance
-
-#### Schema Compliance
-- **Issue**: Activities weren't consistent with the expected schema format
-- **Resolution**:
-  - Added required `status` field to all activities
-  - Ensured consistent date handling for `createdAt` and `updatedAt` fields
-  - Standardized URL fields to improve frontend display consistency
-
-### Webhook Testing Tools
-
-The project includes several utilities to help test and debug webhook functionality:
-
-- **webhook-test.js**: Script that simulates GitHub webhook events by sending properly signed payloads
-- **create-test-activity.js**: Utility to directly create test activities in the database
-- **show-activities.js**: Tool to display detailed information about activities in the database
-- **WEBHOOK_TEST.md**: Test file used to trigger real GitHub webhook events
-
-### Next Steps
-
-1. **Historical Data Integration**:
-   - Implement functionality to fetch historical GitHub data when a user connects their account
-   - Design efficient pagination to handle large repositories
-   - Create background jobs for initial repository synchronization
-
-2. **Content Generation Pipeline**:
-   - Connect the activity collection to the content generation service
-   - Implement smart grouping of related activities
-   - Add natural language processing to extract meaningful content from technical activities
-
-3. **Webhook Management UI**:
-   - Create a dashboard interface for users to manage webhook configuration
-   - Implement webhook status monitoring and testing tools
-   - Add detailed logs and error reporting
-
-4. **Reliability Improvements**:
-   - Implement webhook retries and timeout handling
-   - Add rate limiting for webhook reception
-   - Create alerts for webhook failures
-
-5. **Activity Enhancement**:
-   - Expand metadata collection for richer activity context
-   - Implement activity relationships (e.g., linking PRs to issues)
-   - Add code diff analysis for smarter content generation
-
-6. **Deployment Automation**:
-   - Set up continuous integration and deployment for webhook handlers
-   - Implement robust monitoring for webhook endpoint
-   - Create automated testing for webhook functionality
-
-7. **User Onboarding**:
-   - Simplify the process of setting up GitHub webhooks
-   - Create step-by-step guides for repository connection
-   - Implement automatic webhook creation via GitHub API
-
-### Webhook Configuration
-
-To set up a GitHub webhook that connects to DevCast:
-
-1. Go to your GitHub repository settings
-2. Navigate to "Webhooks" and click "Add webhook"
-3. Set the Payload URL to your DevCast webhook URL (e.g., `https://your-devcast-url.com/api/webhooks/github`)
-4. Set Content type to `application/json`
-5. Set Secret to your `GITHUB_WEBHOOK_SECRET` value from `.env`
-6. Select events you want to track (Recommended: Pushes, Pull requests, Issues, Releases)
-7. Ensure "Active" is checked and save
-
-For local development testing:
-1. Install and configure ngrok (`brew install ngrok` on macOS)
-2. Run ngrok to expose your local server: `ngrok http 3000`
-3. Use the ngrok URL as your webhook URL in GitHub
-4. Set `APP_ENV=development` in your `.env` file to enable development mode 
+This project is licensed under the MIT License - see the LICENSE file for details. 
