@@ -10,19 +10,6 @@ import { TwitterService } from "./twitterService";
 import logger from "@/utils/logger";
 
 /**
- * Simple direct logging function that writes to a file in the root directory
- */
-function telegramLog(message: string): void {
-  console.log(`[TELEGRAM] ${message}`);
-  try {
-    const logFile = './telegram-debug.log';
-    fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${message}\n`);
-  } catch (error) {
-    console.error('Failed to write to telegram log file:', error);
-  }
-}
-
-/**
  * Helper to safely get a MongoDB ObjectId from a document
  */
 function getDocumentId(doc: any): string {

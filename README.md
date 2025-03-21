@@ -33,6 +33,7 @@ All project documentation is stored in the `docs/` folder. Here's a quick refere
 | [DEVCAST_DIAGNOSTIC_REPORT.md](docs/devcast-diagnostic-report.md) | System diagnostic report with identified issues and recommendations |
 | [DEVCAST_FIXES_APPLIED.md](docs/devcast-fixes-applied.md) | Documentation of fixes applied to address system issues |
 | [DEVELOPMENT_NOTES.md](docs/DEVELOPMENT_NOTES.md) | Notes for developers working on the project |
+| [ENHANCED_LOGGING.md](docs/ENHANCED_LOGGING.md) | Detailed guide to the structured logging system and its usage |
 | [IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) | Details on implementation decisions and architecture |
 | [LOGGING_IMPROVEMENTS.md](docs/LOGGING_IMPROVEMENTS.md) | Recommendations for improving the logging system |
 | [LOGGING_SUMMARY.md](docs/LOGGING_SUMMARY.md) | Overview of the current logging infrastructure |
@@ -293,30 +294,75 @@ The project uses TypeScript with strict type checking:
 
 DevCast includes a comprehensive logging system to help with troubleshooting and development:
 
-### Logging System
+### Enhanced Structured Logging System
 
-- **File-based Logging**: 
-  - Core services write logs to various locations for debugging
-  - The content generation process logs detailed information about AI requests and responses
-  - Telegram service logs all user interactions and command processing
+DevCast implements a structured logging system for consistent, organized logs across all components:
 
-### Log Files
+- **Centralized Logger Utility**: Located at `src/utils/logger.ts`
+- **Consistent Formatting**: Standardized timestamp + source + level + message format
+- **Categorized Sources**: TELEGRAM, GITHUB, CLAUDE, and other service-specific logs
+- **Log Levels**: DEBUG, INFO, WARN, ERROR with configurable minimum level
+- **Multiple Outputs**: Console and daily log files with special handling for errors
+- **Specialized AI Logging**: Detailed tracking of AI interactions with metrics
 
-- **AI Debug Logs**:
-  - `logs/ai-debug.log`: Detailed logs of AI interactions
-  - `claude-debug.log`: Direct logs from Claude API interactions in the root directory
-  - `telegram-debug.log`: Logs of Telegram bot interactions
-  - `fallback-debug.log`: Alternative log location if primary logging fails
+### Logger Features
 
-### Testing Logging System
+- **Source-Specific Loggers**: Specialized methods for each service:
+  ```typescript
+  // General logging
+  logger.info('SYSTEM', 'Application started');
+  
+  // Service-specific logging
+  logger.telegram.info('Received message from user');
+  logger.github.debug('Processing webhook payload');
+  
+  // AI interaction logging with metrics
+  logger.ai.logInteraction('CLAUDE', userId, 'Generate tweet', contextData, response, {
+    inputTokens: 523,
+    outputTokens: 42,
+    duration: 2451
+  });
+  ```
 
-The repository includes a test script to verify file system access:
+- **Organized Log Files**:
+  - Daily logs in `logs/YYYY-MM-DD.log`
+  - Consolidated error logs in `logs/errors.log`
+
+- **Runtime Configuration**:
+  ```typescript
+  // Configure logger at runtime
+  logger.configure({
+    minLevel: LogLevel.DEBUG,
+    logToConsole: true,
+    logToFile: true,
+    logDirectory: 'custom-logs',
+    logAIFullResponses: true
+  });
+  ```
+
+### Testing the Logger
+
+The repository includes a test script to verify logger functionality:
 
 ```bash
-node test-logs.js
+node -r ts-node/register scripts/test-logger.js
 ```
 
-This script verifies if the application can create and write to log files in various locations.
+This script simulates a typical content generation flow and demonstrates all logging features.
+
+### Implementation
+
+- All major services have been updated to use the structured logger
+- Legacy console.log calls have been replaced with appropriate logger methods
+- Error handling has been improved across the codebase
+- GitHub webhook handler and Telegram service use service-specific loggers
+
+### Future Logging Improvements
+
+- Add log rotation to manage file sizes
+- Implement remote logging service integration
+- Create a web-based log viewer in the admin dashboard
+- Add performance metrics logging
 
 ### Known Issues
 

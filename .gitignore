@@ -22,6 +22,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# logs
+/logs
+*.log
+claude-request-*.log
+generate-request-*.log
+
 # local env files
 .env
 .env.local
