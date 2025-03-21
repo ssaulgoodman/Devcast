@@ -3,6 +3,7 @@ import connectDB from '../../../src/utils/database';
 import { User } from '../../../src/models/User';
 import { GitHubService } from '../../../src/services/githubService';
 import crypto from 'crypto';
+import logger from '../../../src/utils/logger';
 
 /**
  * GitHub webhook handler
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Verify GitHub signature
     const isValid = verifyGitHubSignature(req);
     if (!isValid) {
-      console.error('Invalid GitHub webhook signature');
+      logger.github.error('Invalid GitHub webhook signature');
       return res.status(401).json({ message: 'Invalid signature' });
     }
     
@@ -52,13 +53,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
       default:
         // Log unhandled events but return success to avoid GitHub retries
-        console.log(`Ignoring unhandled GitHub event: ${event}`);
+        logger.github.info(`Ignoring unhandled GitHub event: ${event}`);
     }
     
     // Send success response
     res.status(200).json({ message: 'Webhook processed successfully' });
   } catch (error) {
-    console.error('Error processing GitHub webhook:', error);
+    logger.github.error('Error processing GitHub webhook:', error);
     res.status(500).json({ message: 'Error processing webhook' });
   }
 }
@@ -74,7 +75,7 @@ function verifyGitHubSignature(req: NextApiRequest): boolean {
   
   // If there's no signature or webhook secret is not set, fail verification
   if (!signature || !process.env.GITHUB_WEBHOOK_SECRET) {
-    console.warn('Webhook verification failed: Missing signature or secret');
+    logger.github.warn('Webhook verification failed: Missing signature or secret');
     // In development, you might want to bypass this check
     return process.env.APP_ENV === 'development';
   }
@@ -101,7 +102,7 @@ async function handlePushEvent(payload: any) {
   try {
     // Validate payload
     if (!payload.repository || !payload.repository.owner || !payload.repository.owner.login) {
-      console.error('Invalid webhook payload: missing repository or owner information');
+      logger.github.error('Invalid webhook payload: missing repository or owner information');
       return;
     }
     
@@ -110,7 +111,7 @@ async function handlePushEvent(payload: any) {
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
-    console.log(`Looking for user with GitHub username: ${githubUsername}`);
+    logger.github.info(`Looking for user with GitHub username: ${githubUsername}`);
     
     // Check both possible locations for the username (due to schema inconsistency)
     const user = await User.findOne({ 
@@ -121,12 +122,12 @@ async function handlePushEvent(payload: any) {
     });
     
     if (!user) {
-      console.error(`No user found with GitHub username: ${githubUsername}`);
+      logger.github.error(`No user found with GitHub username: ${githubUsername}`);
       return;
     }
     
     if (!user.github?.accessToken && !user.accessTokens?.github) {
-      console.error(`User found but missing GitHub access token for username: ${githubUsername}`);
+      logger.github.error(`User found but missing GitHub access token for username: ${githubUsername}`);
       return;
     }
     
@@ -142,9 +143,9 @@ async function handlePushEvent(payload: any) {
     // Sync the user's activities
     const activitiesCount = await githubService.syncUserActivities();
     
-    console.log(`Processed push event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    logger.github.info(`Processed push event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
   } catch (error) {
-    console.error('Error handling push event:', error);
+    logger.github.error('Error handling push event:', error);
   }
 }
 
@@ -155,7 +156,7 @@ async function handlePullRequestEvent(payload: any) {
   try {
     // Validate payload
     if (!payload.repository || !payload.action) {
-      console.error('Invalid pull request payload: missing repository or action information');
+      logger.github.error('Invalid pull request payload: missing repository or action information');
       return;
     }
     
@@ -170,7 +171,7 @@ async function handlePullRequestEvent(payload: any) {
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
-    console.log(`Looking for user with GitHub username: ${githubUsername}`);
+    logger.github.info(`Looking for user with GitHub username: ${githubUsername}`);
     
     // Check both possible locations for the username (due to schema inconsistency)
     const user = await User.findOne({ 
@@ -181,12 +182,12 @@ async function handlePullRequestEvent(payload: any) {
     });
     
     if (!user) {
-      console.error(`No user found with GitHub username: ${githubUsername}`);
+      logger.github.error(`No user found with GitHub username: ${githubUsername}`);
       return;
     }
     
     if (!user.github?.accessToken && !user.accessTokens?.github) {
-      console.error(`User found but missing GitHub access token for username: ${githubUsername}`);
+      logger.github.error(`User found but missing GitHub access token for username: ${githubUsername}`);
       return;
     }
     
@@ -202,9 +203,9 @@ async function handlePullRequestEvent(payload: any) {
     // Sync the user's activities
     const activitiesCount = await githubService.syncUserActivities();
     
-    console.log(`Processed PR event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    logger.github.info(`Processed PR event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
   } catch (error) {
-    console.error('Error handling pull request event:', error);
+    logger.github.error('Error handling pull request event:', error);
   }
 }
 
@@ -215,7 +216,7 @@ async function handleIssueEvent(payload: any) {
   try {
     // Validate payload
     if (!payload.repository || !payload.action) {
-      console.error('Invalid issue payload: missing repository or action information');
+      logger.github.error('Invalid issue payload: missing repository or action information');
       return;
     }
     
@@ -230,7 +231,7 @@ async function handleIssueEvent(payload: any) {
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
-    console.log(`Looking for user with GitHub username: ${githubUsername}`);
+    logger.github.info(`Looking for user with GitHub username: ${githubUsername}`);
     
     // Check both possible locations for the username (due to schema inconsistency)
     const user = await User.findOne({ 
@@ -241,12 +242,12 @@ async function handleIssueEvent(payload: any) {
     });
     
     if (!user) {
-      console.error(`No user found with GitHub username: ${githubUsername}`);
+      logger.github.error(`No user found with GitHub username: ${githubUsername}`);
       return;
     }
     
     if (!user.github?.accessToken && !user.accessTokens?.github) {
-      console.error(`User found but missing GitHub access token for username: ${githubUsername}`);
+      logger.github.error(`User found but missing GitHub access token for username: ${githubUsername}`);
       return;
     }
     
@@ -262,9 +263,9 @@ async function handleIssueEvent(payload: any) {
     // Sync the user's activities
     const activitiesCount = await githubService.syncUserActivities();
     
-    console.log(`Processed issue event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    logger.github.info(`Processed issue event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
   } catch (error) {
-    console.error('Error handling issue event:', error);
+    logger.github.error('Error handling issue event:', error);
   }
 }
 
@@ -275,7 +276,7 @@ async function handleReleaseEvent(payload: any) {
   try {
     // Validate payload
     if (!payload.repository || !payload.action) {
-      console.error('Invalid release payload: missing repository or action information');
+      logger.github.error('Invalid release payload: missing repository or action information');
       return;
     }
     
@@ -290,7 +291,7 @@ async function handleReleaseEvent(payload: any) {
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
-    console.log(`Looking for user with GitHub username: ${githubUsername}`);
+    logger.github.info(`Looking for user with GitHub username: ${githubUsername}`);
     
     // Check both possible locations for the username (due to schema inconsistency)
     const user = await User.findOne({ 
@@ -301,12 +302,12 @@ async function handleReleaseEvent(payload: any) {
     });
     
     if (!user) {
-      console.error(`No user found with GitHub username: ${githubUsername}`);
+      logger.github.error(`No user found with GitHub username: ${githubUsername}`);
       return;
     }
     
     if (!user.github?.accessToken && !user.accessTokens?.github) {
-      console.error(`User found but missing GitHub access token for username: ${githubUsername}`);
+      logger.github.error(`User found but missing GitHub access token for username: ${githubUsername}`);
       return;
     }
     
@@ -322,8 +323,8 @@ async function handleReleaseEvent(payload: any) {
     // Sync the user's activities
     const activitiesCount = await githubService.syncUserActivities();
     
-    console.log(`Processed release event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    logger.github.info(`Processed release event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
   } catch (error) {
-    console.error('Error handling release event:', error);
+    logger.github.error('Error handling release event:', error);
   }
 } 
