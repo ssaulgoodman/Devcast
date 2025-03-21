@@ -7,6 +7,7 @@ export interface UserSettings {
   postingTime: string;
   contentStyle: string;
   autoApprove: boolean;
+  aiProvider?: 'openai' | 'anthropic';
 }
 
 // Define the User interface extending the Document interface
@@ -34,6 +35,17 @@ export interface IUser extends Document {
   telegram?: {
     chatId: string;
     username?: string;
+  };
+
+  // Root level fields (for backward compatibility)
+  githubUsername?: string;
+  githubId?: string;
+
+  // Access tokens (alternative schema)
+  accessTokens?: {
+    github?: string;
+    twitter?: string;
+    twitterSecret?: string;
   };
   
   // User preferences/settings
@@ -93,6 +105,11 @@ const UserSchema = new Schema<IUser>(
       autoApprove: {
         type: Boolean,
         default: false
+      },
+      aiProvider: {
+        type: String,
+        enum: ['openai', 'anthropic'],
+        default: 'openai'
       }
     }
   },
