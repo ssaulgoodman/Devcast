@@ -1,6 +1,6 @@
 # DevCast
 
-Activity test update: Updated on March 21, 2025 - Testing webhook with real commit
+Activity test update: Updated on March 21, 2025 - Testing webhook URL configuration
 
 A build-in-public agent that automatically creates social media content from your development activities. DevCast monitors your GitHub activity and crafts engaging social media updates for your Twitter/X, LinkedIn, and other social platforms - all manageable through a simple Telegram bot interface.
 
