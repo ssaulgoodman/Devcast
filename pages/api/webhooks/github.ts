@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import connectDB from '../../../src/utils/database';
 import { User } from '../../../src/models/User';
+import { Activity } from '../../../src/models/Activity';
 import { GitHubService } from '../../../src/services/githubService';
 import crypto from 'crypto';
 import logger from '../../../src/utils/logger';
@@ -134,16 +135,52 @@ async function handlePushEvent(payload: any) {
     // Get access token from either location
     const accessToken = user.github?.accessToken || user.accessTokens?.github;
     
-    // Process the push event
-    const githubService = new GitHubService(
-      accessToken as string,
-      (user._id as any).toString()
-    );
+    // Process only the new commits from the webhook payload
+    const commits = payload.commits || [];
+    let processedCount = 0;
     
-    // Sync the user's activities
-    const activitiesCount = await githubService.syncUserActivities();
+    if (commits.length > 0) {
+      for (const commit of commits) {
+        // Check if this commit already exists in the database
+        const existingActivity = await Activity.findOne({
+          userId: user._id,
+          type: 'commit',
+          'metadata.commitSha': commit.id
+        });
+        
+        // If the commit is already in the database, skip it
+        if (existingActivity) {
+          logger.github.debug(`Commit ${commit.id} already exists, skipping`);
+          continue;
+        }
+        
+        // Create a new activity for this commit
+        const activity = {
+          userId: user._id,
+          type: 'commit',
+          repo: repository.full_name,
+          title: commit.message.split('\n')[0].trim(),
+          description: commit.message.split('\n').slice(1).join('\n'),
+          githubUrl: commit.url,
+          status: 'pending',
+          metadata: {
+            branch: payload.ref.replace('refs/heads/', ''),
+            commitSha: commit.id,
+            authorName: commit.author?.name,
+            authorEmail: commit.author?.email,
+            authorDate: commit.timestamp,
+          }
+        };
+        
+        // Save the activity to the database
+        await Activity.create(activity);
+        processedCount++;
+      }
+    } else {
+      logger.github.info(`No commits found in the webhook payload`);
+    }
     
-    logger.github.info(`Processed push event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    logger.github.info(`Processed push event for user ${user._id} in repository ${repository.full_name}, created ${processedCount} new activities`);
   } catch (error) {
     logger.github.error('Error handling push event:', error);
   }
@@ -155,8 +192,8 @@ async function handlePushEvent(payload: any) {
 async function handlePullRequestEvent(payload: any) {
   try {
     // Validate payload
-    if (!payload.repository || !payload.action) {
-      logger.github.error('Invalid pull request payload: missing repository or action information');
+    if (!payload.repository || !payload.action || !payload.pull_request) {
+      logger.github.error('Invalid pull request payload: missing repository, action, or pull_request information');
       return;
     }
     
@@ -168,6 +205,7 @@ async function handlePullRequestEvent(payload: any) {
     
     // Get the repository information
     const repository = payload.repository;
+    const pr = payload.pull_request;
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
@@ -194,16 +232,52 @@ async function handlePullRequestEvent(payload: any) {
     // Get access token from either location
     const accessToken = user.github?.accessToken || user.accessTokens?.github;
     
-    // Process the PR event
-    const githubService = new GitHubService(
-      accessToken as string,
-      (user._id as any).toString()
-    );
+    // Check if PR already exists in database
+    const existingActivity = await Activity.findOne({
+      userId: user._id,
+      type: 'pr',
+      repo: repository.full_name,
+      'metadata.prNumber': pr.number
+    });
     
-    // Sync the user's activities
-    const activitiesCount = await githubService.syncUserActivities();
+    // Create activity object
+    const activity = {
+      userId: user._id,
+      type: 'pr',
+      repo: repository.full_name,
+      title: pr.title,
+      description: pr.body || '',
+      githubUrl: pr.html_url,
+      status: 'pending',
+      metadata: {
+        prNumber: pr.number,
+        state: pr.state,
+        merged: pr.merged || false,
+        mergedAt: pr.merged_at,
+        labels: pr.labels?.map((label: any) => label.name) || [],
+      }
+    };
     
-    logger.github.info(`Processed PR event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    let processedCount = 0;
+    
+    if (!existingActivity) {
+      // Create new PR activity
+      await Activity.create(activity);
+      processedCount = 1;
+    } else {
+      // Update existing PR if status changed
+      const metadata = (existingActivity as any).metadata || {};
+      if (metadata.state !== pr.state || metadata.merged !== (pr.merged || false)) {
+        await Activity.findByIdAndUpdate(existingActivity._id, {
+          title: pr.title,
+          description: pr.body || '',
+          metadata: activity.metadata
+        });
+        processedCount = 1;
+      }
+    }
+    
+    logger.github.info(`Processed PR event for user ${user._id} in repository ${repository.full_name}, updated ${processedCount} activities`);
   } catch (error) {
     logger.github.error('Error handling pull request event:', error);
   }
@@ -215,8 +289,8 @@ async function handlePullRequestEvent(payload: any) {
 async function handleIssueEvent(payload: any) {
   try {
     // Validate payload
-    if (!payload.repository || !payload.action) {
-      logger.github.error('Invalid issue payload: missing repository or action information');
+    if (!payload.repository || !payload.action || !payload.issue) {
+      logger.github.error('Invalid issue payload: missing repository, action, or issue information');
       return;
     }
     
@@ -228,6 +302,7 @@ async function handleIssueEvent(payload: any) {
     
     // Get the repository information
     const repository = payload.repository;
+    const issue = payload.issue;
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
@@ -254,16 +329,52 @@ async function handleIssueEvent(payload: any) {
     // Get access token from either location
     const accessToken = user.github?.accessToken || user.accessTokens?.github;
     
-    // Process the issue event
-    const githubService = new GitHubService(
-      accessToken as string,
-      (user._id as any).toString()
-    );
+    // Check if issue already exists in database
+    const existingActivity = await Activity.findOne({
+      userId: user._id,
+      type: 'issue',
+      repo: repository.full_name,
+      'metadata.issueNumber': issue.number
+    });
     
-    // Sync the user's activities
-    const activitiesCount = await githubService.syncUserActivities();
+    // Create activity object
+    const activity = {
+      userId: user._id,
+      type: 'issue',
+      repo: repository.full_name,
+      title: issue.title,
+      description: issue.body || '',
+      githubUrl: issue.html_url,
+      status: 'pending',
+      metadata: {
+        issueNumber: issue.number,
+        state: issue.state,
+        createdAt: issue.created_at,
+        closedAt: issue.closed_at,
+        labels: issue.labels?.map((label: any) => label.name) || [],
+      }
+    };
     
-    logger.github.info(`Processed issue event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    let processedCount = 0;
+    
+    if (!existingActivity) {
+      // Create new issue activity
+      await Activity.create(activity);
+      processedCount = 1;
+    } else {
+      // Update existing issue if status changed
+      const metadata = (existingActivity as any).metadata || {};
+      if (metadata.state !== issue.state) {
+        await Activity.findByIdAndUpdate(existingActivity._id, {
+          title: issue.title,
+          description: issue.body || '',
+          metadata: activity.metadata
+        });
+        processedCount = 1;
+      }
+    }
+    
+    logger.github.info(`Processed issue event for user ${user._id} in repository ${repository.full_name}, updated ${processedCount} activities`);
   } catch (error) {
     logger.github.error('Error handling issue event:', error);
   }
@@ -275,8 +386,8 @@ async function handleIssueEvent(payload: any) {
 async function handleReleaseEvent(payload: any) {
   try {
     // Validate payload
-    if (!payload.repository || !payload.action) {
-      logger.github.error('Invalid release payload: missing repository or action information');
+    if (!payload.repository || !payload.action || !payload.release) {
+      logger.github.error('Invalid release payload: missing repository, action, or release information');
       return;
     }
     
@@ -288,6 +399,7 @@ async function handleReleaseEvent(payload: any) {
     
     // Get the repository information
     const repository = payload.repository;
+    const release = payload.release;
     
     // Get the user by GitHub username
     const githubUsername = repository.owner.login;
@@ -314,16 +426,43 @@ async function handleReleaseEvent(payload: any) {
     // Get access token from either location
     const accessToken = user.github?.accessToken || user.accessTokens?.github;
     
-    // Process the release event
-    const githubService = new GitHubService(
-      accessToken as string,
-      (user._id as any).toString()
-    );
+    // Check if release already exists in database
+    const existingActivity = await Activity.findOne({
+      userId: user._id,
+      type: 'release',
+      repo: repository.full_name,
+      'metadata.tagName': release.tag_name
+    });
     
-    // Sync the user's activities
-    const activitiesCount = await githubService.syncUserActivities();
+    // Skip if release activity already exists
+    if (existingActivity) {
+      logger.github.debug(`Release ${release.tag_name} already exists, skipping`);
+      return;
+    }
     
-    logger.github.info(`Processed release event for user ${user._id} in repository ${repository.full_name}, synced ${activitiesCount} activities`);
+    // Create activity object
+    const activity = {
+      userId: user._id,
+      type: 'release',
+      repo: repository.full_name,
+      title: `${release.name || release.tag_name}`,
+      description: release.body || '',
+      githubUrl: release.html_url,
+      status: 'pending',
+      metadata: {
+        tagName: release.tag_name,
+        releaseName: release.name,
+        draft: release.draft,
+        prerelease: release.prerelease,
+        createdAt: release.created_at,
+        publishedAt: release.published_at,
+      }
+    };
+    
+    // Save the activity to the database
+    await Activity.create(activity);
+    
+    logger.github.info(`Processed release event for user ${user._id} in repository ${repository.full_name}, created 1 new activity`);
   } catch (error) {
     logger.github.error('Error handling release event:', error);
   }
